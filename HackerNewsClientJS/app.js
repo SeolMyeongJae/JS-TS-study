@@ -10,17 +10,26 @@ const CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json';
 // content를 보여줄 div 태그 생성
 const content = document.createElement('div');
 
+// API 요청하는 중복코드를 함수로 구현
+function getData(url) {
+  ajax.open('GET', url, false);
+  ajax.send();
+
+  return JSON.parse(ajax.response);
+}
+
 // 해커뉴스 데이터 요청, false는 동기적으로 처리하하는 옵션
-ajax.open('GET', NEWS_URL, false);
+// ajax.open('GET', NEWS_URL, false);
 
 // send 함수를 호출하면 데이터를 가져옴
-ajax.send();
+// ajax.send();
 
 // 데이터는 response에 저장
 // console.log(ajax.response);
 
 // JSON 데이터를 객체로 변환
-const newsFeed = JSON.parse(ajax.response);
+// const newsFeed = JSON.parse(ajax.response);
+const newsFeed = getData(NEWS_URL);
 // console.log(newsFeed);
 
 // 데이터를 화면에 보여줄 ul 태그 생성
@@ -30,10 +39,11 @@ const ul = document.createElement('ul');
 window.addEventListener('hashchange', function () {
   // location은 브라우저에서 주소와 관련된 정보를 제공해주는 객체
   const id = location.hash.substr(1);
-  ajax.open('GET', CONTENT_URL.replace('@id', id), false);
-  ajax.send();
+  // ajax.open('GET', CONTENT_URL.replace('@id', id), false);
+  // ajax.send();
 
-  const newsContent = JSON.parse(ajax.response);
+  // const newsContent = JSON.parse(ajax.response);
+  const newsContent = getData(CONTENT_URL.replace('@id', id));
   // console.log(newsContent);
   const title = document.createElement('h1');
 
