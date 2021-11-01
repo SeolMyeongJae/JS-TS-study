@@ -43,17 +43,20 @@ window.addEventListener('hashchange', function () {
 
 // 보여줄 데이터를 ul 태그의 자식으로 li 추가
 for (let i = 0; i < 10; i++) {
-  const li = document.createElement('li');
+  // DOM API를 직접 사용해서 UI를 구현했을 때 실제 그 구조가 잘 드러나지 않는 문제점이 있다
+  // 문자열을 이용해서 UI를 만드는 방식을 통해 개선할 수 있다
+  // DOM이 제공하는 innerHTML은 문자열에 HTML태그가 있으면 HTML태그로 자동으로 변환해주는 역할을 한다
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <li>
+      <a href="#${newsFeed[i].id}">
+        ${newsFeed[i].title} (${newsFeed[i].comments_count})
+      </a>
+    </li>
+  `;
 
-  // title을 클릭했을 때 해당 데이터의 내용을 보여주는 화면으로 전환
-  const a = document.createElement('a');
-  a.href = `#${newsFeed[i].id}`;
-
-  // 제목과 댓글 수 표시
-  a.innerHTML = `${newsFeed[i].title} (${newsFeed[i].comments_count})`;
-
-  li.appendChild(a);
-  ul.appendChild(li);
+  // firstElementChild라는 속성은 첫번째 자식 요소를 제공해준다
+  ul.appendChild(div.firstElementChild);
 }
 
 // root 태그의 자식으로 ul 추가
