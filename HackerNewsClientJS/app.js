@@ -13,6 +13,7 @@ const content = document.createElement('div');
 // 여러 함수가 공유하는 자원을 담을 객체 생성
 const store = {
   currentPage: 1,
+  feeds: [],
 };
 
 // API 요청하는 중복코드를 함수로 구현
@@ -23,9 +24,18 @@ function getData(url) {
   return JSON.parse(ajax.response);
 }
 
+// 뉴스를 읽었는지 안읽었는지 상태를 가지기 위한 함수
+function makeFeeds(feeds) {
+  for (let i = 0; i < feeds.length; i++) {
+    feeds[i].read = false;
+  }
+
+  return feeds;
+}
+
 // 라우터 처리를 위해 글 목록을 보여주는 동작을 재사용이 필요하므로 함수로 구현
 function newsFeed() {
-  const newsFeed = getData(NEWS_URL);
+  let newsFeed = store.feeds;
   const newsList = [];
   let template = `
   <div class="bg-gray-600 min-h-screen">
@@ -51,6 +61,10 @@ function newsFeed() {
     </div>
   </div>
 `;
+
+  if (newsFeed.length === 0) {
+    newsFeed = store.feeds = makeFeeds(getData(NEWS_URL));
+  }
 
   for (let i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
     newsList.push(`
@@ -90,6 +104,7 @@ function newsDetail() {
   // location은 브라우저에서 주소와 관련된 정보를 제공해주는 객체
   const id = location.hash.substr(7);
   const newsContent = getData(CONTENT_URL.replace('@id', id));
+
   let template = `
     <div class="bg-gray-600 min-h-screen pb-8">
       <div class="bg-white text-xl">
@@ -118,6 +133,13 @@ function newsDetail() {
       </div>
     </div>
   `;
+
+  for (let i = 0; i < store.feeds.length; i++) {
+    if (store.feeds[i].id === Number(id)) {
+      store.feeds[i].read = true;
+      break;
+    }
+  }
 
   // content의 댓글, 대댓글을 보여주는 함수
   function makeComment(comments, called = 0) {
