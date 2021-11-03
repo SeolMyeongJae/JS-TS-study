@@ -1,7 +1,23 @@
-const container = document.getElementById('root');
+type Store = {
+  currentPage: number;
+  feeds: NewsFeed[];
+};
+
+type NewsFeed = {
+  id: number;
+  comments_couunt: number;
+  url: string;
+  user: string;
+  time_ago: string;
+  points: number;
+  title: string;
+  read?: boolean;
+};
+
+const container: HTMLElement | null = document.getElementById('root');
 
 // XMLHttpRequest 서버에 데이터 요청
-const ajax = new XMLHttpRequest();
+const ajax: XMLHttpRequest = new XMLHttpRequest();
 const NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json';
 
 // title을 클릭했을 때 데이터를 호출할 주소
@@ -11,7 +27,7 @@ const CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json';
 const content = document.createElement('div');
 
 // 여러 함수가 공유하는 자원을 담을 객체 생성
-const store = {
+const store: Store = {
   currentPage: 1,
   feeds: [],
 };
@@ -33,9 +49,17 @@ function makeFeeds(feeds) {
   return feeds;
 }
 
+function updateView(html) {
+  if (container !== null) {
+    container.innerHTML = html;
+  } else {
+    console.error('최상위 컨테이너가 없어 UI를 전달하지 못합니다.');
+  }
+}
+
 // 라우터 처리를 위해 글 목록을 보여주는 동작을 재사용이 필요하므로 함수로 구현
 function newsFeed() {
-  let newsFeed = store.feeds;
+  let newsFeed: NewsFeed[] = store.feeds;
   const newsList = [];
   let template = `
   <div class="bg-gray-600 min-h-screen">
@@ -97,7 +121,7 @@ function newsFeed() {
     newsFeed.length / 10 > store.currentPage ? store.currentPage + 1 : store.currentPage
   );
 
-  container.innerHTML = template;
+  updateView(template);
 }
 
 function newsDetail() {
@@ -163,8 +187,8 @@ function newsDetail() {
 
     return commentString.join('');
   }
-  // content를 보여주기 전에 이전의 내용을 모두 날리고 content를 화면에 표시
-  container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
+
+  updateView(template);
 }
 
 function router() {
