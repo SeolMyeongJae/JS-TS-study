@@ -45,35 +45,49 @@ const store: Store = {
   feeds: [],
 };
 
+// Api클래스를 NewsFeedApi와 NewsDetailApi에 믹스인 하기 위한 함수
+function applyApiMixins(targetClass: any, baseClasses: any[]): void {
+  baseClasses.forEach((baseClass) => {
+    Object.getOwnPropertyNames(baseClass.prototype).forEach((name) => {
+      const descriptor = Object.getOwnPropertyDescriptor(baseClass.prototype, name);
+
+      if (descriptor) {
+        Object.defineProperty(targetClass.prototype, name, descriptor);
+      }
+    });
+  });
+}
+
 // getData함수를 상속 컨셉을 사용해서 수정
 class Api {
   // 클래스는 최초에 초기화 과정이 필요하고 그 함수가 constructor라는 생성자다
-  url: string;
-  ajax: XMLHttpRequest;
+  // url: string;
+  // ajax: XMLHttpRequest;
 
-  constructor(url: string) {
-    // Api를 호출할 때 url, XML인스턴스를 생성하는 과정이 필요함
-    this.url = url;
-    this.ajax = new XMLHttpRequest();
-  }
+  // constructor(url: string) {
+  //   // Api를 호출할 때 url, XML인스턴스를 생성하는 과정이 필요함
+  //   this.url = url;
+  //   this.ajax = new XMLHttpRequest();
+  // }
 
-  protected getRequest<AjaxResponse>(): AjaxResponse {
-    this.ajax.open('GET', this.url, false);
-    this.ajax.send();
+  getRequest<AjaxResponse>(url: string): AjaxResponse {
+    const ajax = new XMLHttpRequest();
+    ajax.open('GET', url, false);
+    ajax.send();
 
-    return JSON.parse(this.ajax.response);
+    return JSON.parse(ajax.response);
   }
 }
 
-class NewsFeedApi extends Api {
+class NewsFeedApi {
   getData(): NewsFeed[] {
-    return this.getRequest<NewsFeed[]>();
+    return this.getRequest<NewsFeed[]>(NEWS_URL);
   }
 }
 
-class NewsDetailApi extends Api {
-  getData(): NewsDetail[] {
-    return this.getRequest<NewsDetail[]>();
+class NewsDetailApi {
+  getData(id: string): NewsDetail {
+    return this.getRequest<NewsDetail>(CONTENT_URL.replace('@id', id));
   }
 }
 
@@ -87,6 +101,11 @@ class NewsDetailApi extends Api {
 //   return JSON.parse(ajax.response);
 // }
 
+interface NewsFeedApi extends Api {}
+interface NewsDetailApi extends Api {}
+
+applyApiMixins(NewsFeedApi, [Api]);
+applyApiMixins(NewsDetailApi, [Api]);
 // 뉴스를 읽었는지 안읽었는지 상태를 가지기 위한 함수
 function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
   for (let i = 0; i < feeds.length; i++) {
@@ -106,7 +125,7 @@ function updateView(html: string): void {
 
 // 라우터 처리를 위해 글 목록을 보여주는 동작을 재사용이 필요하므로 함수로 구현
 function newsFeed(): void {
-  const api = new NewsFeedApi(NEWS_URL);
+  const api = new NewsFeedApi();
   let newsFeed: NewsFeed[] = store.feeds;
   const newsList = [];
   let template = `
@@ -175,8 +194,8 @@ function newsFeed(): void {
 function newsDetail(): void {
   // location은 브라우저에서 주소와 관련된 정보를 제공해주는 객체
   const id = location.hash.substr(7);
-  const api = new NewsDetailApi(CONTENT_URL.replace('@id', id));
-  const newsContent = api.getData();
+  const api = new NewsDetailApi();
+  const newsContent = api.getData(id);
 
   let template = `
     <div class="bg-gray-600 min-h-screen pb-8">
