@@ -45,15 +45,47 @@ const store: Store = {
   feeds: [],
 };
 
+// getData함수를 상속 컨셉을 사용해서 수정
+class Api {
+  // 클래스는 최초에 초기화 과정이 필요하고 그 함수가 constructor라는 생성자다
+  url: string;
+  ajax: XMLHttpRequest;
+
+  constructor(url: string) {
+    // Api를 호출할 때 url, XML인스턴스를 생성하는 과정이 필요함
+    this.url = url;
+    this.ajax = new XMLHttpRequest();
+  }
+
+  protected getRequest<AjaxResponse>(): AjaxResponse {
+    this.ajax.open('GET', this.url, false);
+    this.ajax.send();
+
+    return JSON.parse(this.ajax.response);
+  }
+}
+
+class NewsFeedApi extends Api {
+  getData(): NewsFeed[] {
+    return this.getRequest<NewsFeed[]>();
+  }
+}
+
+class NewsDetailApi extends Api {
+  getData(): NewsDetail[] {
+    return this.getRequest<NewsDetail[]>();
+  }
+}
+
 // API 요청하는 중복코드를 함수로 구현
 // getData는 NewsFeed를 반환할수도 있고 NewsDetail을 반환할 수도 있다
 // 이런 상황에서 제네릭을 톻해 함수를 호출할 때 유형을 정의해주면 그 유형을 받아서 그대로 반환하겠다는 의미
-function getData<AjaxResponse>(url: string): AjaxResponse {
-  ajax.open('GET', url, false);
-  ajax.send();
+// function getData<AjaxResponse>(url: string): AjaxResponse {
+//   ajax.open('GET', url, false);
+//   ajax.send();
 
-  return JSON.parse(ajax.response);
-}
+//   return JSON.parse(ajax.response);
+// }
 
 // 뉴스를 읽었는지 안읽었는지 상태를 가지기 위한 함수
 function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
@@ -74,6 +106,7 @@ function updateView(html: string): void {
 
 // 라우터 처리를 위해 글 목록을 보여주는 동작을 재사용이 필요하므로 함수로 구현
 function newsFeed(): void {
+  const api = new NewsFeedApi(NEWS_URL);
   let newsFeed: NewsFeed[] = store.feeds;
   const newsList = [];
   let template = `
@@ -102,7 +135,7 @@ function newsFeed(): void {
 `;
 
   if (newsFeed.length === 0) {
-    newsFeed = store.feeds = makeFeeds(getData<NewsFeed[]>(NEWS_URL));
+    newsFeed = store.feeds = makeFeeds(api.getData());
   }
 
   for (let i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
@@ -142,7 +175,8 @@ function newsFeed(): void {
 function newsDetail(): void {
   // location은 브라우저에서 주소와 관련된 정보를 제공해주는 객체
   const id = location.hash.substr(7);
-  const newsContent = getData<NewsDetail>(CONTENT_URL.replace('@id', id));
+  const api = new NewsDetailApi(CONTENT_URL.replace('@id', id));
+  const newsContent = api.getData();
 
   let template = `
     <div class="bg-gray-600 min-h-screen pb-8">
