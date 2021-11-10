@@ -9,22 +9,27 @@ export class Api {
     this.url = url;
   }
 
-  getRequestWithXHR<AjaxResponse>(cb: (data: AjaxResponse) => void): void {
-    this.xhr.open('GET', this.url);
-    this.xhr.addEventListener('load', () => {
-      cb(JSON.parse(this.xhr.response) as AjaxResponse);
-    });
+  // getRequestWithXHR<AjaxResponse>(cb: (data: AjaxResponse) => void): void {
+  //   this.xhr.open('GET', this.url);
+  //   this.xhr.addEventListener('load', () => {
+  //     cb(JSON.parse(this.xhr.response) as AjaxResponse);
+  //   });
 
-    this.xhr.send();
-  }
+  //   this.xhr.send();
+  // }
 
-  getRequestWithPromise<AjaxResponse>(cb: (data: AjaxResponse) => void): void {
-    fetch(this.url)
-      .then((response) => response.json())
-      .then(cb)
-      .catch(() => {
-        console.error('데이터를 불러오지 못했습니다.');
-      });
+  // getRequestWithPromise<AjaxResponse>(cb: (data: AjaxResponse) => void): void {
+  //   fetch(this.url)
+  //     .then((response) => response.json())
+  //     .then(cb)
+  //     .catch(() => {
+  //       console.error('데이터를 불러오지 못했습니다.');
+  //     });
+  // }
+
+  async request<AjaxResponse>(): Promise<AjaxResponse> {
+    const response = await fetch(this.url);
+    return (await response.json()) as AjaxResponse;
   }
 }
 
@@ -33,12 +38,16 @@ export class NewsFeedApi extends Api {
     super(url);
   }
 
-  getDataWithXhr(cb: (data: NewsFeed[]) => void): void {
-    return this.getRequestWithXHR<NewsFeed[]>(cb);
-  }
+  // getDataWithXhr(cb: (data: NewsFeed[]) => void): void {
+  //   return this.getRequestWithXHR<NewsFeed[]>(cb);
+  // }
 
-  getDataWithPromise(cb: (data: NewsFeed[]) => void): void {
-    return this.getRequestWithPromise<NewsFeed[]>(cb);
+  // getDataWithPromise(cb: (data: NewsFeed[]) => void): void {
+  //   return this.getRequestWithPromise<NewsFeed[]>(cb);
+  // }
+
+  async getData(): Promise<NewsFeed[]> {
+    return this.request<NewsFeed[]>();
   }
 }
 
@@ -47,11 +56,14 @@ export class NewsDetailApi extends Api {
     super(url);
   }
 
-  getDataWithXHR(cb: (data: NewsDetail) => void): void {
-    return this.getRequestWithXHR<NewsDetail>(cb);
-  }
+  // getDataWithXHR(cb: (data: NewsDetail) => void): void {
+  //   return this.getRequestWithXHR<NewsDetail>(cb);
+  // }
 
-  getDataWithPromise(cb: (data: NewsDetail) => void): void {
-    return this.getRequestWithPromise<NewsDetail>(cb);
+  // getDataWithPromise(cb: (data: NewsDetail) => void): void {
+  //   return this.getRequestWithPromise<NewsDetail>(cb);
+  // }
+  getData(): Promise<NewsDetail> {
+    return this.request<NewsDetail>();
   }
 }
